@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Table</title>
+    <style>
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        .sort-arrow {
+            margin-left: 7px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<input type="text" id="emailFilter" placeholder="Filter by email" size="25">
+
+<table id="userTable">
+    <thead>
+    <tr>
+        <th id="nameHeader">Name <span class="sort-arrow" id="nameArrow"></span></th>
+        <th id="emailHeader">Email</th>
+        <th id="salaryHeader">Salary <span class="sort-arrow" id="salaryArrow"></span></th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tableBody = document.querySelector("#userTable tbody");
+        const emailFilterInput = document.querySelector("#emailFilter");
+        const apiUrl = "[[${apiUrl}]]";
+
+        let users = [];
+        let currentSortColumn = "";
+        let currentSortOrder = "asc";
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.message);
+                }
+
+                users = await response.json();
+                console.log(users);
+                renderTable();
+            } catch (error) {
+                console.error("Error loading users:", error);
+                showErrorMessage("Error loading users: " + error.message);
+            }
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = "";
+
+            let filteredUsers = users.filter(user =>
+                user.email.includes(emailFilterInput.value.trim())
+            );
+
+            let sortedUsers = [...filteredUsers];
+
+            if (currentSortColumn) {
+                const order = currentSortOrder === "asc" ? 1 : -1;
+                sortedUsers.sort((a, b) =>
+                    a[currentSortColumn] > b[currentSortColumn] ? order : a[currentSortColumn] < b[currentSortColumn] ? -order : 0
+                );
+            }
+
+            sortedUsers.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.salary}</td>
+                    `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateArrowIcons() {
+            const nameArrow = document.getElementById("nameArrow");
+            const salaryArrow = document.getElementById("salaryArrow");
+
+            if (currentSortColumn === "name") {
+                nameArrow.textContent = currentSortOrder === "asc" ? "↑" : "↓";
+            } else {
+                nameArrow.textContent = "";
+            }
+
+            if (currentSortColumn === "salary") {
+                salaryArrow.textContent = currentSortOrder === "asc" ? "↑" : "↓";
+            } else {
+                salaryArrow.textContent = "";
+            }
+        }
+
+        function showErrorMessage(message) {
+            const tableBody = document.querySelector("#userTable tbody");
+            tableBody.innerHTML = `<tr><td colspan="3" style="color: red; text-align: center;">${message}</td></tr>`;
+        }
+
+        document.getElementById("nameHeader").addEventListener("click", function () {
+            if (currentSortColumn === "name") {
+                currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+            } else {
+                currentSortColumn = "name";
+                currentSortOrder = "asc";
+            }
+
+            updateArrowIcons();
+            renderTable();
+        });
+
+        document.getElementById("salaryHeader").addEventListener("click", function () {
+            if (currentSortColumn === "salary") {
+                currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+            } else {
+                currentSortColumn = "salary";
+                currentSortOrder = "asc";
+            }
+
+            updateArrowIcons();
+            renderTable();
+        });
+
+        emailFilterInput.addEventListener("input", renderTable);
+
+        fetchUsers();
+    });
+</script>
+
+</body>
+</html>

@@ -14,7 +14,7 @@ Gradle 8+
 
 Клонировать репозиторий git clone https://github.com/Rimut18/testEltex.git
 
-Настроить переменные окружения: EXTERNAL_API_URL=https://
+Настроить переменные окружения(написать url из задания): EXTERNAL_API_URL=https://
 
 Собрать и запустить приложение
 
